@@ -20,8 +20,11 @@ type shadow_t
 
 val shadow_t : shadow_t Ctypes_static.structure Ctypes.typ
 
+
+type mem = shadow_t Ctypes.structure * char Ctypes.carray * char Ctypes.carray
+
 val from_shadow_t : shadow_t Ctypes.structure -> t
-val to_shadow_t : t -> shadow_t Ctypes.structure
+val to_shadow_t : t -> mem
 
 val db_to_string : db -> string
 

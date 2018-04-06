@@ -31,6 +31,8 @@ let sp_flag     = field shadow_t "sp_flag" ulong
 
 let () = seal shadow_t
 
+type mem = shadow_t structure * char carray * char carray
+
 let ptr_char_to_string = coerce (ptr char) string
 
 let string_to_char_array s =
@@ -56,9 +58,11 @@ let from_shadow_t_opt = function
   | Some sp -> Some (from_shadow_t (!@sp))
 
 let to_shadow_t sp =
+  let name = string_to_char_array sp.name in
+  let passwd = string_to_char_array sp.passwd in
   let sp_t : shadow_t structure = make shadow_t in
-  setf sp_t sp_name (sp.name |> string_to_char_array |> CArray.start);
-  setf sp_t sp_passwd (sp.passwd |> string_to_char_array |> CArray.start);
+  setf sp_t sp_name (CArray.start name);
+  setf sp_t sp_passwd (CArray.start passwd);
   setf sp_t sp_last_chg (Signed.Long.of_int64 sp.last_chg);
   setf sp_t sp_min (Signed.Long.of_int64 sp.min);
   setf sp_t sp_max (Signed.Long.of_int64 sp.max);
@@ -66,7 +70,7 @@ let to_shadow_t sp =
   setf sp_t sp_inact (Signed.Long.of_int64 sp.inact);
   setf sp_t sp_expire (Signed.Long.of_int64 sp.expire);
   setf sp_t sp_flag (Unsigned.ULong.of_int sp.flag);
-  sp_t
+  (sp_t, name, passwd)
 
 let shadow_file = "/etc/shadow"
 
@@ -84,9 +88,9 @@ let endspent = foreign ~check_errno:true "endspent" (void @-> returning void)
 let putspent' =
   foreign ~check_errno:true
     "putspent" (ptr shadow_t @-> Passwd.file_descr @-> returning int)
-let putspent fd sp = 
-  let shadow_ptr = addr (to_shadow_t sp) in
-  putspent' shadow_ptr fd |> ignore
+let putspent fd sp =
+  let (shadow, name, passwd) = to_shadow_t sp in
+  putspent' (addr shadow) fd |> ignore
 
 let lckpwdf' = foreign "lckpwdf" (void @-> returning int)
 let lckpwdf () = lckpwdf' () = 0

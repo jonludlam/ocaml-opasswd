@@ -90,8 +90,8 @@ let test_gc () =
       result;
     end
   in
-  let first = mkshadow 10000 in
-  let second = mkshadow 10000 in
+  let (first,firstname,firstpasswd) = mkshadow 1000000 in
+  let (second,secondname,secondpasswd) = mkshadow 1000000 in
   let first_t = Shadow.from_shadow_t first in
   let second_t = Shadow.from_shadow_t second in
   if (first_t = second_t) then
